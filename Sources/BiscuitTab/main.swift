@@ -84,7 +84,7 @@ final class Menu: NSObject {
             m.addItem(mi)
         }
         m.addItem(.separator())
-        let p =NSMenuItem(title: "Show window preview", action: #selector(togglePreview), keyEquivalent: "")
+        let p = NSMenuItem(title: "Show window preview", action: #selector(togglePreview), keyEquivalent: "")
         p.target = self
         p.state = previewEnabled ? .on : .off
         m.addItem(p)
