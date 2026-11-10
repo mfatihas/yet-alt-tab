@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "BiscuitTab",
+    name: "YetAltTab",
     platforms: [.macOS(.v12)],
-    targets: [.executableTarget(name: "BiscuitTab", path: "Sources/BiscuitTab")]
+    targets: [.executableTarget(name: "YetAltTab", path: "Sources/YetAltTab")]
 )
