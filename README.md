@@ -18,7 +18,7 @@ Accessibility (hotkey + raising windows) and Screen Recording (titles + previews
 
 ## Build
 
-CI builds a universal `.app` on every push and signs it ad-hoc (free, no Apple account). Get `BiscuitTab.zip` from the Actions artifacts, or push a `v*` tag to publish a release. Local: `swift build -c release`.
+CI builds a universal `.app` in a `.dmg` on every push and signs it ad-hoc (free, no Apple account). Get `BiscuitTab.dmg` from the Actions artifacts, or push a `v*` tag to publish a release. Local: `swift build -c release`.
 
 First launch: right-click the app > Open. Ad-hoc signatures change per build, so macOS may ask you to re-grant permissions after each update.
 

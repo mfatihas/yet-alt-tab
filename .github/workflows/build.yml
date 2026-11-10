@@ -46,16 +46,19 @@ jobs:
           codesign --force --deep --sign - BiscuitTab.app
           codesign --verify --verbose BiscuitTab.app
 
-      - name: Zip
-        run: ditto -c -k --keepParent BiscuitTab.app BiscuitTab.zip
+      - name: DMG
+        run: |
+          mkdir stage && cp -R BiscuitTab.app stage/ && ln -s /Applications stage/Applications
+          hdiutil create -volname BiscuitTab -srcfolder stage -ov -format UDZO BiscuitTab.dmg
+          codesign --force --sign - BiscuitTab.dmg
 
       - uses: actions/upload-artifact@v4
         with:
           name: BiscuitTab
-          path: BiscuitTab.zip
+          path: BiscuitTab.dmg
 
       - name: Release
         if: startsWith(github.ref, 'refs/tags/v')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" BiscuitTab.zip --generate-notes
+        run: gh release create "$GITHUB_REF_NAME" BiscuitTab.dmg --generate-notes
