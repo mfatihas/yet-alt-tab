@@ -59,10 +59,17 @@ jobs:
           codesign --force --deep --sign - YetAltTab.app
           codesign --verify --verbose YetAltTab.app
 
+      # Drag-to-Applications window: app icon on the left, Applications link on the right, arrow background.
       - name: DMG
         run: |
-          mkdir stage && cp -R YetAltTab.app stage/ && ln -s /Applications stage/Applications
-          hdiutil create -volname YetAltTab -srcfolder stage -ov -format UDZO YetAltTab.dmg
+          brew install create-dmg
+          mkdir stage && cp -R YetAltTab.app stage/
+          create-dmg --volname YetAltTab --volicon YetAltTab.app/Contents/Resources/AppIcon.icns \
+            --background assets/dmg-bg.png --window-pos 200 120 --window-size 600 400 --icon-size 100 \
+            --icon YetAltTab.app 150 190 --hide-extension YetAltTab.app --app-drop-link 450 190 \
+            YetAltTab.dmg stage \
+          || { echo "create-dmg failed, using plain DMG"; rm -f YetAltTab.dmg; ln -s /Applications stage/Applications;
+               hdiutil create -volname YetAltTab -srcfolder stage -ov -format UDZO YetAltTab.dmg; }
           codesign --force --sign - YetAltTab.dmg
 
       - uses: actions/upload-artifact@v4

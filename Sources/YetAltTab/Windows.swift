@@ -25,6 +25,9 @@ var cols = 1
 var query = ""
 var showing = false
 var snapshots: [CGWindowID: NSImage] = [:]
+// The window switched to last. CG z-order lags behind focus changes, so a quick second Option+Tab would otherwise
+// still see the old front window at index 0 and pick the wrong "previous" one.
+var lastCommit: (id: CGWindowID, at: Date)?
 
 let defaults = UserDefaults.standard
 let modifiers: [(name: String, flag: CGEventFlags)] = [("Option", .maskAlternate), ("Control", .maskControl), ("Command", .maskCommand)]
@@ -114,6 +117,8 @@ func focus(_ w: Win) {
         if isMinimized(el) { AXUIElementSetAttributeValue(el, kAXMinimizedAttribute as CFString, kCFBooleanFalse) }
         AXUIElementPerformAction(el, kAXRaiseAction as CFString)
     }
+    // macOS 14+ often ignores activate() from a background app; AXFrontmost reliably brings the app forward.
+    AXUIElementSetAttributeValue(AXUIElementCreateApplication(w.pid), kAXFrontmostAttribute as CFString, kCFBooleanTrue)
     app?.activate(options: [.activateIgnoringOtherApps])
 }
 

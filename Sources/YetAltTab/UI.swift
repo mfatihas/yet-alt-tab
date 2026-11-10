@@ -92,6 +92,7 @@ func makeTile(_ w: Win, _ i: Int) -> Tile {
 }
 
 func render() {
+    guard showing else { return }
     let screen = NSScreen.screens[0].frame
     cols = style == .titles ? 1 : max(1, Int(screen.width * 0.9 / (200 * scale)))  // auto-size: grid fits the screen
     let outer = NSStackView()
@@ -157,7 +158,10 @@ func hide() {
 
 func commit() {
     hide()
-    if shown.indices.contains(sel) { focus(shown[sel]) }
+    if shown.indices.contains(sel) {
+        lastCommit = (shown[sel].id, Date())
+        focus(shown[sel])
+    }
 }
 
 func move(_ step: Int) {
@@ -175,6 +179,10 @@ func refilter() {
 func open(sameApp: Bool, step: Int) {
     var all = listWindows()
     if sameApp, let pid = NSWorkspace.shared.frontmostApplication?.processIdentifier { all = all.filter { $0.pid == pid } }
+    if let lc = lastCommit, Date().timeIntervalSince(lc.at) < 1,
+       let i = all.firstIndex(where: { $0.id == lc.id }), i > 0 {
+        all.insert(all.remove(at: i), at: 0)
+    }
     guard all.count > 1 else { return }
     wins = all
     shown = all
@@ -182,5 +190,7 @@ func open(sameApp: Bool, step: Int) {
     snapshots = [:]
     showing = true
     sel = step > 0 ? 1 : all.count - 1  // index 0 is the current window
-    render()
+    // Drawing (window snapshots) is slow and the event tap must return fast, or macOS disables it and drops the
+    // Option release. A quick tap releases before this runs, so render() bails out once showing is false.
+    DispatchQueue.main.async { render() }
 }
