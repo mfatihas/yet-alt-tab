@@ -113,7 +113,12 @@ let menu = Menu()
 menu.rebuild()
 
 // Accessibility: event tap + raising windows. Screen Recording: window titles and previews.
-_ = CGRequestScreenCaptureAccess()
+// Ask once per version: asking on every launch keeps re-opening System Settings when the grant went stale after an update.
+let askedKey = "askedScreenCapture-\(currentVersion)"
+if !CGPreflightScreenCaptureAccess(), !defaults.bool(forKey: askedKey) {
+    defaults.set(true, forKey: askedKey)
+    _ = CGRequestScreenCaptureAccess()
+}
 guard AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeUnretainedValue(): true] as CFDictionary) else {
     print("Grant Accessibility permission in System Settings, then relaunch.")
     exit(1)

@@ -53,10 +53,29 @@ jobs:
           mkdir -p YetAltTab.app/Contents/Resources
           iconutil -c icns $I -o YetAltTab.app/Contents/Resources/AppIcon.icns
 
-      # Free signing: ad-hoc (no Apple Developer account). Gatekeeper will ask for right-click > Open once.
-      - name: Sign (ad-hoc)
+      # Optional stable identity: a self-signed cert (secrets SIGN_CERT_P12 base64 + SIGN_CERT_PASSWORD) keeps the code
+      # requirement identical across builds, so macOS keeps Accessibility / Screen Recording grants after updates.
+      # Without the secrets the build falls back to ad-hoc, whose identity changes every build.
+      - name: Import signing cert
+        env:
+          CERT_P12: ${{ secrets.SIGN_CERT_P12 }}
+          CERT_PASS: ${{ secrets.SIGN_CERT_PASSWORD }}
         run: |
-          codesign --force --deep --sign - YetAltTab.app
+          [ -z "$CERT_P12" ] && exit 0
+          echo "$CERT_P12" | base64 -d > cert.p12
+          security create-keychain -p ci build.keychain
+          security set-keychain-settings -lut 21600 build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import cert.p12 -k build.keychain -P "$CERT_PASS" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain >/dev/null
+          security list-keychains -d user -s build.keychain login.keychain
+          echo "SIGN_ID=$(security find-identity -p codesigning build.keychain | awk '/[0-9A-F]{40}/{print $2; exit}')" >> $GITHUB_ENV
+          rm cert.p12
+
+      - name: Sign
+        run: |
+          codesign --force --deep --sign "${SIGN_ID:--}" YetAltTab.app
+          codesign -dvv YetAltTab.app 2>&1 | grep -e Authority -e Signature -e Identifier
           codesign --verify --verbose YetAltTab.app
 
       # Drag-to-Applications window: app icon on the left, Applications link on the right, arrow background.
@@ -70,7 +89,7 @@ jobs:
             YetAltTab.dmg stage \
           || { echo "create-dmg failed, using plain DMG"; rm -f YetAltTab.dmg; ln -s /Applications stage/Applications;
                hdiutil create -volname YetAltTab -srcfolder stage -ov -format UDZO YetAltTab.dmg; }
-          codesign --force --sign - YetAltTab.dmg
+          codesign --force --sign "${SIGN_ID:--}" YetAltTab.dmg
 
       - uses: actions/upload-artifact@v4
         with:
