@@ -22,6 +22,10 @@ CI builds a universal `.app` in a `.dmg` on every push and signs it ad-hoc (free
 
 First launch: macOS shows "Apple could not verify BiscuitTab..." because the app isn't notarized (that needs a paid Apple Developer account). Either open System Settings > Privacy & Security and click "Open Anyway", or run `xattr -dr com.apple.quarantine /Applications/BiscuitTab.app`. Right-click > Open no longer works on macOS 15+. Ad-hoc signatures change per build, so macOS may ask you to re-grant permissions after each update.
 
+## Signing
+
+Releases are ad-hoc signed, which is free but not trusted by Gatekeeper. Removing the warning needs a Developer ID certificate and notarization from the Apple Developer Program ($99/year). Apple has no free tier for open-source projects. SignPath Foundation (free for open source) only signs Windows binaries, and a self-signed certificate gives the same warning.
+
 ## Known limits
 
 - Selecting a window on another Space jumps to the app's last-used window there, not always the exact one.
