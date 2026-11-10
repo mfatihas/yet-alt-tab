@@ -66,6 +66,32 @@ final class Menu: NSObject {
             m.addItem(mi)
         }
         m.addItem(.separator())
+        m.addItem(withTitle: "Size", action: nil, keyEquivalent: "").isEnabled = false
+        for (i, name) in ["Small", "Medium", "Large"].enumerated() {
+            let mi = NSMenuItem(title: name, action: #selector(setSize(_:)), keyEquivalent: "")
+            mi.target = self
+            mi.tag = i
+            mi.state = i == sizeIndex ? .on : .off
+            m.addItem(mi)
+        }
+        m.addItem(.separator())
+        m.addItem(withTitle: "Theme", action: nil, keyEquivalent: "").isEnabled = false
+        for (t, name) in zip(Theme.allCases, ["System", "Light", "Dark"]) {
+            let mi = NSMenuItem(title: name, action: #selector(setTheme(_:)), keyEquivalent: "")
+            mi.target = self
+            mi.tag = t.rawValue
+            mi.state = t == theme ? .on : .off
+            m.addItem(mi)
+        }
+        m.addItem(.separator())
+        let p =NSMenuItem(title: "Show window preview", action: #selector(togglePreview), keyEquivalent: "")
+        p.target = self
+        p.state = previewEnabled ? .on : .off
+        m.addItem(p)
+        m.addItem(.separator())
+        let u = NSMenuItem(title: "Check for Updates… (\(currentVersion))", action: #selector(checkUpdates), keyEquivalent: "")
+        u.target = self
+        m.addItem(u)
         let q = NSMenuItem(title: "Quit", action: #selector(quit), keyEquivalent: "q")
         q.target = self
         m.addItem(q)
@@ -74,6 +100,10 @@ final class Menu: NSObject {
 
     @objc func setMod(_ s: NSMenuItem) { defaults.set(s.tag, forKey: "mod"); rebuild() }
     @objc func setStyle(_ s: NSMenuItem) { defaults.set(s.tag, forKey: "style"); rebuild() }
+    @objc func setSize(_ s: NSMenuItem) { defaults.set(s.tag, forKey: "size"); rebuild() }
+    @objc func setTheme(_ s: NSMenuItem) { defaults.set(s.tag, forKey: "theme"); rebuild() }
+    @objc func togglePreview() { defaults.set(!previewEnabled, forKey: "preview"); rebuild() }
+    @objc func checkUpdates() { checkForUpdates(silent: false) }
     @objc func quit() { NSApp.terminate(nil) }
 }
 
@@ -97,4 +127,9 @@ guard let t = CGEvent.tapCreate(tap: .cgSessionEventTap, place: .headInsertEvent
 }
 tap = t
 CFRunLoopAddSource(CFRunLoopGetMain(), CFMachPortCreateRunLoopSource(nil, t, 0), .commonModes)
+// Auto-check at most once a day.
+if Date().timeIntervalSince1970 - defaults.double(forKey: "lastUpdateCheck") > 86400 {
+    defaults.set(Date().timeIntervalSince1970, forKey: "lastUpdateCheck")
+    checkForUpdates(silent: true)
+}
 app.run()

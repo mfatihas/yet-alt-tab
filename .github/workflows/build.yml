@@ -34,11 +34,13 @@ jobs:
             <key>CFBundleIdentifier</key><string>com.mfatihas.biscuittab</string>
             <key>CFBundleName</key><string>BiscuitTab</string>
             <key>CFBundlePackageType</key><string>APPL</string>
-            <key>CFBundleShortVersionString</key><string>1.0</string>
+            <key>CFBundleShortVersionString</key><string>__VERSION__</string>
             <key>LSMinimumSystemVersion</key><string>12.0</string>
             <key>LSUIElement</key><true/>
           </dict></plist>
           EOF
+          VER=0.0.0; case "$GITHUB_REF_NAME" in v*) VER=${GITHUB_REF_NAME#v};; esac
+          sed -i '' "s/__VERSION__/$VER/" $APP/Contents/Info.plist
 
       # Free signing: ad-hoc (no Apple Developer account). Gatekeeper will ask for right-click > Open once.
       - name: Sign (ad-hoc)

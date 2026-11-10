@@ -30,6 +30,15 @@ let defaults = UserDefaults.standard
 let modifiers: [(name: String, flag: CGEventFlags)] = [("Option", .maskAlternate), ("Control", .maskControl), ("Command", .maskCommand)]
 var modifier: CGEventFlags { modifiers[min(max(defaults.integer(forKey: "mod"), 0), modifiers.count - 1)].flag }
 enum Style: Int, CaseIterable { case thumbnails, icons, titles }
+enum Theme: Int, CaseIterable {
+    case auto, light, dark
+    var appearance: NSAppearance? { self == .auto ? nil : NSAppearance(named: self == .light ? .aqua : .darkAqua) }
+}
+var theme: Theme { Theme(rawValue: defaults.integer(forKey: "theme")) ?? .auto }
+let sizeScales: [CGFloat] = [0.8, 1, 1.3]  // small, medium, large
+var sizeIndex: Int { min(max(defaults.object(forKey: "size") as? Int ?? 1, 0), sizeScales.count - 1) }
+var scale: CGFloat { sizeScales[sizeIndex] }
+var previewEnabled: Bool { defaults.object(forKey: "preview") as? Bool ?? true }
 var style: Style { Style(rawValue: defaults.integer(forKey: "style")) ?? .thumbnails }
 
 func spaceOrder() -> [Int] {

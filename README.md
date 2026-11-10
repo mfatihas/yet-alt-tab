@@ -4,12 +4,14 @@ Windows-style Alt-Tab window switcher for macOS, modeled on [AltTab](https://alt
 
 ## Features
 
-- Option+Tab cycles every window (Shift reverses, arrows move, Return or releasing Option switches, Esc cancels, click picks).
+- Option+Tab cycles every window (Shift reverses, arrows move, Return or releasing Option switches, Esc cancels, hovering selects and previews, click picks).
 - Includes minimized, hidden and other-Space windows, with a badge (Minimized / Hidden / Space N).
-- Full-size preview of the selected window.
+- Full-size preview of the selected window (toggle in the menu bar item).
 - Option+` cycles windows of the current app only.
 - Type while open to search window titles.
 - Styles: thumbnails, app icons, title list. The grid auto-sizes to the screen.
+- Auto-update from GitHub releases (daily check, or "Check for Updates" in the menu).
+- Size (small, medium, large) and theme (system, light, dark).
 - Shortcut modifier: Option, Control or Command.
 
 ## Permissions

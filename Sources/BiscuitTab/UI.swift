@@ -16,23 +16,47 @@ let previewPanel: NSPanel = {
     return p
 }()
 
+var tiles: [Tile] = []
+
+func setHighlight(_ i: Int, _ on: Bool) {
+    guard tiles.indices.contains(i) else { return }
+    tiles[i].layer?.backgroundColor = on ? NSColor.controlAccentColor.withAlphaComponent(0.75).cgColor : nil
+}
+
 final class Tile: NSStackView {
     var index = 0
     override func mouseDown(with event: NSEvent) { sel = index; commit() }
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        trackingAreas.forEach(removeTrackingArea)
+        // mouseMoved (not mouseEntered) so a stationary cursor under the panel doesn't override keyboard selection.
+        addTrackingArea(NSTrackingArea(rect: .zero, options: [.mouseMoved, .activeAlways, .inVisibleRect], owner: self))
+    }
+
+    // Hover selects the tile and shows its preview; highlight is updated in place so views aren't rebuilt under the cursor.
+    override func mouseMoved(with event: NSEvent) {
+        guard index != sel else { return }
+        setHighlight(sel, false)
+        sel = index
+        setHighlight(sel, true)
+        updatePreview()
+    }
 }
 
-func label(_ s: String, size: CGFloat = 13, color: NSColor = .white, maxWidth: CGFloat) -> NSTextField {
+// Sizes passed to label/fixed are base values; the Size setting scales them.
+func label(_ s: String, size: CGFloat = 13, color: NSColor = .labelColor, maxWidth: CGFloat) -> NSTextField {
     let l = NSTextField(labelWithString: s)
-    l.font = .systemFont(ofSize: size)
+    l.font = .systemFont(ofSize: size * scale)
     l.textColor = color
     l.lineBreakMode = .byTruncatingTail
-    l.widthAnchor.constraint(lessThanOrEqualToConstant: maxWidth).isActive = true
+    l.widthAnchor.constraint(lessThanOrEqualToConstant: maxWidth * scale).isActive = true
     return l
 }
 
 func fixed(_ v: NSView, _ w: CGFloat, _ h: CGFloat) -> NSView {
-    v.widthAnchor.constraint(equalToConstant: w).isActive = true
-    v.heightAnchor.constraint(equalToConstant: h).isActive = true
+    v.widthAnchor.constraint(equalToConstant: w * scale).isActive = true
+    v.heightAnchor.constraint(equalToConstant: h * scale).isActive = true
     return v
 }
 
@@ -44,7 +68,7 @@ func makeTile(_ w: Win, _ i: Int) -> Tile {
     t.wantsLayer = true
     t.layer?.cornerRadius = 8
     t.layer?.backgroundColor = i == sel ? NSColor.controlAccentColor.withAlphaComponent(0.75).cgColor : nil
-    let badge = w.badge.isEmpty ? nil : label(w.badge, size: 11, color: .lightGray, maxWidth: 180)
+    let badge = w.badge.isEmpty ? nil : label(w.badge, size: 11, color: .secondaryLabelColor, maxWidth: 180)
     switch style {
     case .thumbnails:
         t.orientation = .vertical
@@ -69,22 +93,24 @@ func makeTile(_ w: Win, _ i: Int) -> Tile {
 
 func render() {
     let screen = NSScreen.screens[0].frame
-    cols = style == .titles ? 1 : max(1, Int(screen.width * 0.9 / 200))  // auto-size: grid fits the screen
+    cols = style == .titles ? 1 : max(1, Int(screen.width * 0.9 / (200 * scale)))  // auto-size: grid fits the screen
     let outer = NSStackView()
     outer.orientation = .vertical
     outer.alignment = .leading
     outer.spacing = 4
     outer.edgeInsets = NSEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
-    if !query.isEmpty { outer.addArrangedSubview(label("Search: \(query)", size: 13, color: .lightGray, maxWidth: 400)) }
+    if !query.isEmpty { outer.addArrangedSubview(label("Search: \(query)", size: 13, color: .secondaryLabelColor, maxWidth: 400)) }
     if shown.isEmpty { outer.addArrangedSubview(label("No match", size: 15, maxWidth: 400)) }
+    tiles = []
     for start in stride(from: 0, to: shown.count, by: cols) {
-        let tiles = (start..<min(start + cols, shown.count)).map { makeTile(shown[$0], $0) }
-        let row = NSStackView(views: tiles)
+        let rowTiles = (start..<min(start + cols, shown.count)).map { makeTile(shown[$0], $0) }
+        tiles += rowTiles
+        let row = NSStackView(views: rowTiles)
         row.spacing = 4
         outer.addArrangedSubview(row)
     }
     let bg = NSVisualEffectView()
-    bg.material = .hudWindow
+    bg.material = .popover
     bg.state = .active
     bg.wantsLayer = true
     bg.layer?.cornerRadius = 14
@@ -97,6 +123,7 @@ func render() {
         outer.topAnchor.constraint(equalTo: bg.topAnchor),
         outer.bottomAnchor.constraint(equalTo: bg.bottomAnchor),
     ])
+    panel.appearance = theme.appearance
     panel.contentView = bg
     panel.setContentSize(bg.fittingSize)
     panel.setFrameOrigin(NSPoint(x: screen.midX - panel.frame.width / 2, y: screen.minY + screen.height * 0.25))
@@ -106,7 +133,7 @@ func render() {
 
 // Full-size preview of the selected window, drawn where the window is (centered and shrunk if it's off-screen).
 func updatePreview() {
-    guard shown.indices.contains(sel), let img = snapshot(shown[sel].id) else { previewPanel.orderOut(nil); return }
+    guard previewEnabled, shown.indices.contains(sel), let img = snapshot(shown[sel].id) else { previewPanel.orderOut(nil); return }
     let w = shown[sel]
     let screen = NSScreen.screens[0].frame
     var f = CGRect(x: w.bounds.minX, y: screen.height - w.bounds.maxY, width: w.bounds.width, height: w.bounds.height)
