@@ -20,7 +20,7 @@ Accessibility (hotkey + raising windows) and Screen Recording (titles + previews
 
 CI builds a universal `.app` in a `.dmg` on every push and signs it ad-hoc (free, no Apple account). Get `BiscuitTab.dmg` from the Actions artifacts, or push a `v*` tag to publish a release. Local: `swift build -c release`.
 
-First launch: right-click the app > Open. Ad-hoc signatures change per build, so macOS may ask you to re-grant permissions after each update.
+First launch: macOS shows "Apple could not verify BiscuitTab..." because the app isn't notarized (that needs a paid Apple Developer account). Either open System Settings > Privacy & Security and click "Open Anyway", or run `xattr -dr com.apple.quarantine /Applications/BiscuitTab.app`. Right-click > Open no longer works on macOS 15+. Ad-hoc signatures change per build, so macOS may ask you to re-grant permissions after each update.
 
 ## Known limits
 
