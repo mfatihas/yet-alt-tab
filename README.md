@@ -1,6 +1,6 @@
 # BiscuitTab
 
-Windows-style Alt-Tab window switcher for macOS, modeled on [AltTab](https://alt-tab.app/). Menu bar item (⇥) sets shortcut and style.
+Repo: [mfatihas/yet-alt-tab](https://github.com/mfatihas/yet-alt-tab). Windows-style Alt-Tab window switcher for macOS, modeled on [AltTab](https://alt-tab.app/). Menu bar item (⇥) sets shortcut and style.
 
 ## Features
 
@@ -32,3 +32,7 @@ Releases are ad-hoc signed, which is free but not trusted by Gatekeeper. Removin
 
 - Selecting a window on another Space jumps to the app's last-used window there, not always the exact one.
 - Untested on a real Mac so far; expect compile fixes on the first CI run.
+
+## License
+
+[WTFPL](LICENSE). This is original code, not derived from AltTab (GPL-3.0), so it can use a different license.

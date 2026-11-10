@@ -1,6 +1,6 @@
 import Cocoa
 
-let repo = "mfatihas/biscuit-tab"
+let repo = "mfatihas/yet-alt-tab"
 // CI stamps the release tag into Info.plist; untagged builds report 0.0.0 and always see the latest release as newer.
 let currentVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
 
